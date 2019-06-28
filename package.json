@@ -1,0 +1,31 @@
+{
+  "name": "exam-api-core",
+  "version": "1.0.0",
+  "description": "express routes implemented apis for exam server",
+  "main": "main.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "npm test",
+    "start": "node example/server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duongtdn/exam-api-core.git"
+  },
+  "author": "duongtdn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/duongtdn/exam-api-core/issues"
+  },
+  "homepage": "https://github.com/duongtdn/exam-api-core#readme",
+  "dependencies": {
+    "express-api-builder": "^1.3.0",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1"
+  }
+}
