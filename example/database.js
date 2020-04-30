@@ -51,24 +51,24 @@ const Tests = [
 
 const Exams = [
   {
-    examId: 'emb-01-final-exam',
-    title: 'Final Test',
-    description: 'This exam test your knowledge and skill after course Embedded ARM Programming for Beginner',
-    sections: [
-      {id: 'sc1', title: 'Section 1', description: 'Section 1 composed 10 quizzes about Text'},
-      {id: 'sc2', title: 'Section 2', description: 'Section 1 composed 10 quizzes about Choice'},
-      {id: 'sc3', title: 'Section 3', description: 'Section 3 composed 5 quizzes about DragDrop'}
+    "examId": "c-01-f",
+    "title": "Final Test",
+    "description": "This exam test your knowledge and skill after course Embedded ARM Programming for Beginner",
+    "sections": [
+      {"id": "sc1", "title": "Section 1", "description": "Section 1 composed 10 quizzes about Text"},
+      {"id": "sc2", "title": "Section 2", "description": "Section 1 composed 10 quizzes about Choice"},
+      {"id": "sc3", "title": "Section 3", "description": "Section 3 composed 5 quizzes about DragDrop"}
     ],
-    questions: [
-      {qbankId: '_qtxt_0_', number: 6, score: 10, section: 'sc1'},
-      {qbankId: '_qtxt_1_', number: 4, score: 10, section: 'sc1'},
-      {qbankId: '_qmch_0_', number: 6, score: 10, section: 'sc2'},
-      {qbankId: '_qmch_1_', number: 4, score: 10, section: 'sc2'},
-      {qbankId: '_qdrd_0_', number: 5, score: 10, section: 'sc3'},
+    "questions": [
+      {"qbankId": "_qtxt_0_", "number": 6, "score": 10, "section": "sc1"},
+      {"qbankId": "_qtxt_1_", "number": 4, "score": 10, "section": "sc1"},
+      {"qbankId": "_qmch_0_", "number": 6, "score": 10, "section": "sc2"},
+      {"qbankId": "_qmch_1_", "number": 4, "score": 10, "section": "sc2"},
+      {"qbankId": "_qdrd_0_", "number": 5, "score": 10, "section": "sc3"}
     ],
-    duration: 30,
-    passScore: 200,
-    owners: ['app-id']
+    "duration": 30,
+    "passScore": 200,
+    "owners": ["app-id"]
   }
 ]
 
@@ -82,6 +82,9 @@ for (let i = 0; i < Qbanks.length; i++) {
   console.log(`  ${qbank.questions.length} quizzes\n`)
 }
 console.log('')
+const json = JSON.stringify(Qbanks,null,4)
+fs.writeFileSync('example/Qbanks.json', json)
+console.log('Qbanks were written to example/Qbanks.json')
 
 module.exports = {
     Tests: {

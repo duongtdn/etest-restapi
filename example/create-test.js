@@ -14,7 +14,7 @@ console.log(`Exam ID is ${examId}`)
 const uid = '4fc9d440-8f7a-11e9-95d5-315e185d3a06'
 console.log(`User ID is ${uid}`)
 
-const params = jwt.sign({ ownerId, examId, uid }, process.env.SHARE_AUTH_KEY)
+const params = jwt.sign({ ownerId, examId, uid }, process.env.APP_SHARE_KEY)
 console.log(`\nParams is ${params}\n`)
 
 console.log('Requesting api: POST /register/exam\n')

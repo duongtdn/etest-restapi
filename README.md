@@ -42,5 +42,5 @@ The following `environment parameter` must be set
 PRIVATE_AUTH_KEY=key-to-authen-realm-with-account-server
 PRIVATE_SESSION_KEY=key-to-encode-session
 PRIVATE_TEST_KEY=key-to-encode-test
-SHARE_AUTH_KEY=share-auth-key-between-apps-to-allow-api-invoke
+APP_SHARE_KEY=share-auth-key-between-apps-to-allow-api-invoke
 ```

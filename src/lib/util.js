@@ -36,4 +36,8 @@ function authen() {
   }
 }
 
-module.exports = { is, now, authen }
+function ustring(ln) {
+  return Math.random().toString(36).substr(2,ln)
+}
+
+module.exports = { is, now, authen, ustring }

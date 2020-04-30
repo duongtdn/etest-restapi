@@ -7,13 +7,16 @@ const { now, authen } = require('../../lib/util')
 function validateAttachedSession() {
   return function(req, res, next) {
     if (req.body.session) {
-      _validateSession({
-        session: req.body.session,
-        onSuccess: next,
-        onFailure: err=> res.status(404).json({ explaination: 'Session is invalid or expired'})
-      })
+      jwt.verify(req.body.session, process.env.PRIVATE_SESSION_KEY, (err, decoded) => {
+        if (err) {
+          res.status(404).json({ error: 'Session is invalid or expired'});
+        } else {
+          req.session = decoded.session;
+          next();
+        }
+      });
     } else {
-      next()
+      next();
     }
   }
 }
@@ -21,31 +24,40 @@ function validateAttachedSession() {
 function getTestData(helpers) {
   return function(req, res, next) {
     if (!req.body.testId) {
-      res.status(400).json({ explaination: 'Missing testId' })
-      return
+      res.status(400).json({ error: 'Missing test Id' });
+      return;
     }
     jwt.verify(req.body.testId, process.env.PRIVATE_TEST_KEY, (err, decoded) => {
       if (err) {
-        res.status(404).json({ explaination: 'Invalid Test or Test has been expired'})
-      } else {
-        req.testId = decoded.testId
-        helpers.Collections.Tests.find({ testId: req.testId }, (testData) => {
-          if (testData.length > 0) {
-            req.testData = testData[0]
-            if (req.testData.assignedTo !== req.uid) {
-              res.status(403).json({ explaination:'Forbidden' })
-              return
-            }
-            if (req.testData.completedAt) {
-              res.status(404).json({ explaination: 'Test has been finished'})
-              return
-            }
-            next()
-          } else {
-            res.status(404).json({ explaination:'Test not found' })
-          }
-        })
+        res.status(404).json({ error: 'Invalid Test or Test has been expired'});
+        return;
       }
+      req.testId = decoded.testId;
+      helpers.Database.TEST.find({ testId: `= ${req.testId}`})
+      .then( data => {
+        if (data.length > 0) {
+          req.testData = data[0];
+          if (req.testData.assignedTo !== req.uid) {
+            res.status(403).json({ error:'Forbidden' });
+            return;
+          }
+          if (req.testData.completedAt) {
+            res.status(404).json({ error: 'Test has been finished'});
+            return;
+          }
+          next();
+        } else {
+          res.status(404).json({ error:'Test not found' });
+        }
+      })
+      .catch(err => {
+        helpers.alert && helpers.alert({
+          action: 'GET Test Data',
+          message: 'Could not read TEST. Database operation failed',
+          error: err
+        });
+        res.status(500).json({ error: 'Failed to Access Database' });
+      })
     })
   }
 }
@@ -54,12 +66,12 @@ function validateStoredSession() {
   return function(req, res, next) {
     if (req.testData.session) {
       if (req.body.session && req.body.session === req.testData.session) {
-        next()
+        next();
       } else {
-        res.status(404).json({ explaination: 'Session mismatch'})
+        res.status(404).json({ error: 'Session mismatch'});
       }
     } else {
-      next()
+      next();
     }
   }
 }
@@ -67,20 +79,41 @@ function validateStoredSession() {
 function signSessionToken(helpers) {
   return function(req, res, next) {
     if (req.testData.session) {
-      next()
+      next();
     } else {
-      const testId = req.testId
-      const token = jwt.sign({ testId }, process.env.PRIVATE_SESSION_KEY, {expiresIn: `${req.testData.duration + 5}m`})
-      req.testData.session = token
-      req.testData.startAt = now.timestamp()
-      helpers.Collections.Tests.update({ testId, session: token, startAt: req.testData.startAt}, (err) => {
-        if (err) {
-          res.status(500).json({ explaination: 'Failed to create session' })
-        } else {
-          next()
-        }
-      })
+      const testId = req.testId;
+      const token = jwt.sign({ testId }, process.env.PRIVATE_SESSION_KEY, {expiresIn: `${req.testData.duration + 5}m`});
+      req.testData.session = token;
+      req.testData.startAt = now.timestamp();
+      helpers.Database.TEST.update({ testId }, {session: token, startAt: req.testData.startAt})
+      .then(() => next())
+      .catch(err => {
+        helpers.alert && helpers.alert({
+          action: 'UPDATE Session to Test table',
+          message: 'Could not write to TEST. Database operation failed',
+          error: err
+        });
+        res.status(500).json({ error: 'Failed to create session' });
+      });
     }
+  }
+}
+
+function serializeTestContent() {
+  return function(req, res, next) {
+    const content = req.testData.content;
+    const length = Object.keys(content.questions).length;
+    const questions = [];
+    for (let i = 0; i < length; i++) {
+      const q = content.questions[i+1];
+      questions.push({
+        problem: q.problem,
+        score: q.score,
+        section: q.section,
+      });
+    }
+    content.questions = questions;
+    next();
   }
 }
 
@@ -95,18 +128,8 @@ function response() {
       startAt: req.testData.startAt,
       resultId: req.testData.resultId
     }
-    res.status(201).json(data)
+    res.status(201).json(data);
   }
 }
 
-function _validateSession({session, onSuccess, onFailure}) {
-  jwt.verify(session, process.env.PRIVATE_SESSION_KEY, (err, decoded) => {
-    if (err) {
-      onFailure && onFailure({ explaination: 'Forbidden - Session expired'})
-    } else {
-      onSuccess && onSuccess()
-    }
-  })
-}
-
-module.exports = [authen, validateAttachedSession, getTestData, validateStoredSession, signSessionToken, response]
+module.exports = [authen, validateAttachedSession, getTestData, validateStoredSession, signSessionToken, serializeTestContent, response];
